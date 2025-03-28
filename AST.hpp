@@ -13,6 +13,7 @@ namespace Toy {
 class ExprAST {
 public:
   virtual ~ExprAST() = default;
+  virtual std::string to_string() const = 0;
 };
 
 class NumberExprAST : public ExprAST {
@@ -20,6 +21,7 @@ class NumberExprAST : public ExprAST {
 
 public:
   explicit NumberExprAST(double value) : value(value) {}
+  std::string to_string() const override;
 };
 
 class VariableExprAST : public ExprAST {
@@ -27,15 +29,17 @@ class VariableExprAST : public ExprAST {
 
 public:
   explicit VariableExprAST(const std::string &name) : name(name) {}
+  std::string to_string() const override;
 };
 
 class BinaryExprAST : public ExprAST {
-  char opcode;
+  std::string opcode;
   std::unique_ptr<ExprAST> lhs, rhs;
 
 public:
-  BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs)
+  BinaryExprAST(const std::string &op, ExprAST *lhs, ExprAST *rhs)
       : opcode(op), lhs(lhs), rhs(rhs) {}
+  std::string to_string() const override;
 };
 
 // class UnaryExprAST : public ExprAST {
@@ -53,8 +57,9 @@ class CallExprAST : public ExprAST {
 
 public:
   CallExprAST(const std::string &callee,
-              std::vector<std::unique_ptr<ExprAST>> arguments)
+              std::vector<std::unique_ptr<ExprAST>> &arguments)
       : callee(callee), arguments(std::move(arguments)) {}
+  std::string to_string() const override;
 };
 
 class PrototypeAST : public ExprAST {
@@ -64,6 +69,7 @@ class PrototypeAST : public ExprAST {
 public:
   PrototypeAST(const std::string &name, std::vector<std::string> arguments)
       : name(name), arguments(std::move(arguments)) {}
+  std::string to_string() const override;
 };
 
 class FunctionAST : public ExprAST {
@@ -71,9 +77,19 @@ class FunctionAST : public ExprAST {
   std::unique_ptr<ExprAST> body;
 
 public:
-  FunctionAST(std::unique_ptr<PrototypeAST> proto,
-              std::unique_ptr<ExprAST> body)
-      : proto(std::move(proto)), body(std::move(body)) {}
+  FunctionAST(PrototypeAST *proto, ExprAST *body) : proto(proto), body(body) {}
+  std::string to_string() const override;
+};
+
+class IfElseExprAST : public ExprAST {
+  std::unique_ptr<ExprAST> condition;
+  std::unique_ptr<ExprAST> then;
+  std::unique_ptr<ExprAST> else_;
+
+public:
+  IfElseExprAST(ExprAST *condition, ExprAST *then, ExprAST *else_)
+      : condition(condition), then(then), else_(else_) {}
+  std::string to_string() const override;
 };
 } // namespace Toy
 

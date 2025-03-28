@@ -35,6 +35,7 @@ namespace Toy{
     Toy::ExprAST* exprVal;
     Toy::PrototypeAST* protoVal;
     Toy::FunctionAST* funcVal;
+    Toy::IfElseExprAST* ifVal;
     std::vector<std::string>* parmList;
     std::vector<std::unique_ptr<Toy::ExprAST>>* argList;
 }
@@ -61,22 +62,18 @@ namespace Toy{
 %%
 
 program:
-    | program function
-    | program extern_decl
-    ;
-
-extern_decl:
-    EXTERN proto {
+    | program function {
+        std::cout << $2->to_string() << '\n';
+    }
+    | program EXTERN proto {
+        std::cout << $3->to_string() << '\n';
     }
     ;
 
 function:
     DEF IDENTIFIER LPAREN parms RPAREN LBRACE expr RBRACE {
         auto proto = new Toy::PrototypeAST(*$2, *$4);
-        $$ = new Toy::FunctionAST(
-            std::unique_ptr<Toy::PrototypeAST>(proto),
-            std::unique_ptr<Toy::ExprAST>($7)
-        );
+        $$ = new Toy::FunctionAST(proto, $7);
     }
     ;
 
@@ -104,25 +101,31 @@ args:
      /* empty */ { $$ = new std::vector<std::unique_ptr<Toy::ExprAST>>(); }
      | expr {
         $$ = new std::vector<std::unique_ptr<Toy::ExprAST>>();
+        $$->emplace_back($1);
      }
      | args COMMA expr {
-
+        $1->emplace_back($3);
      }
+
 
 expr:
     NUMBER         { $$ = new Toy::NumberExprAST($1); }
     | IDENTIFIER     { $$ = new Toy::VariableExprAST(*$1); }
-    | expr ADD expr  { $$ = new Toy::BinaryExprAST('+', $1, $3); }
-    | expr SUB expr  { $$ = new Toy::BinaryExprAST('-', $1, $3); }
-    | expr MUL expr  { $$ = new Toy::BinaryExprAST('*', $1, $3); }
-    | expr DIV expr  { $$ = new Toy::BinaryExprAST('/', $1, $3); }
-    | expr LT expr   { $$ = new Toy::BinaryExprAST('<', $1, $3); }
-    | expr GT expr   { $$ = new Toy::BinaryExprAST('>', $1, $3); }
+    | expr ADD expr  { $$ = new Toy::BinaryExprAST("+", $1, $3); }
+    | expr SUB expr  { $$ = new Toy::BinaryExprAST("-", $1, $3); }
+    | expr MUL expr  { $$ = new Toy::BinaryExprAST("*", $1, $3); }
+    | expr DIV expr  { $$ = new Toy::BinaryExprAST("/", $1, $3); }
+    | expr LT expr   { $$ = new Toy::BinaryExprAST("<", $1, $3); }
+    | expr LE expr   { $$ = new Toy::BinaryExprAST("<=", $1, $3); }
+    | expr GT expr   { $$ = new Toy::BinaryExprAST(">", $1, $3); }
+    | expr GE expr   { $$ = new Toy::BinaryExprAST(">=", $1, $3); }
+    | expr EQ expr   { $$ = new Toy::BinaryExprAST("==", $1, $3); }
+    | expr NE expr   { $$ = new Toy::BinaryExprAST("!=", $1, $3); }
     | IDENTIFIER LPAREN args RPAREN {
-        // $$ = new Toy::CallExprAST(*$1, *$3);
+        $$ = new Toy::CallExprAST(*$1, *$3);
     }
     | IF expr LBRACE expr RBRACE ELSE LBRACE expr RBRACE {
-        // 注意：这里简化了if-else的AST表示，实际需要更完整的处理
+        $$ = new Toy::IfElseExprAST($2, $4, $8);
     }
     | LPAREN expr RPAREN { $$ = $2; }
     ;
