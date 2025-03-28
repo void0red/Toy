@@ -26,6 +26,7 @@ namespace Toy{
     #include "Scanner.hpp"
 #undef yylex
 #define yylex scanner.yylex
+    #include "Logger.hpp"
 }
 
 
@@ -63,10 +64,10 @@ namespace Toy{
 
 program:
     | program function {
-        std::cout << $2->to_string() << '\n';
+        LOG_DEBUG() << $2->to_string() << '\n';
     }
     | program EXTERN proto {
-        std::cout << $3->to_string() << '\n';
+        LOG_DEBUG() << $3->to_string() << '\n';
     }
     ;
 

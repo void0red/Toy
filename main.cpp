@@ -8,6 +8,7 @@
 #include <llvm/IR/LLVMContext.h>
 
 int main(int argc, char *argv[]) {
+  Toy::Logger::instance().setLogLevel(Toy::LogLevel::DEBUG);
   if (argc != 2) {
     return -1;
   }
@@ -18,5 +19,6 @@ int main(int argc, char *argv[]) {
   auto scanner = std::make_unique<Toy::Scanner>(&file);
   auto parser = std::make_unique<Toy::Parser>(*scanner);
   parser->parse();
+  LOG_INFO("Done!");
   return 0;
 }

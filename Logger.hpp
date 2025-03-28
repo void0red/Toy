@@ -4,12 +4,31 @@
 
 #ifndef LOG_HPP
 #define LOG_HPP
+#include <format>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
-#include <thread>
 
 namespace Toy {
+class NullStreamBuf : public std::streambuf {
+protected:
+  std::streambuf::int_type overflow(std::streambuf::int_type c) override {
+    return c;
+  }
+  int sync() override { return 0; }
+};
+
+class NullStream : public std::ostream {
+private:
+  NullStreamBuf buffer;
+
+public:
+  NullStream() : std::ostream(&buffer) {}
+
+  NullStream(const NullStream &) = delete;
+  NullStream &operator=(const NullStream &) = delete;
+};
+static NullStream nullStream;
 
 enum class LogLevel { DEBUG, INFO, WARN, ERROR, FATAL };
 
@@ -27,34 +46,44 @@ public:
   void setLogLevel(LogLevel level) { currentLevel = level; }
 
   template <typename... Args>
-  void log(LogLevel level, const char *format, Args... args) {
-    if (level < currentLevel)
-      return;
+  std::ostream &log(LogLevel level, std::format_string<Args...> fmt,
+                    Args... args) {
+    if (level < currentLevel) {
+      return nullStream;
+    }
 
     std::lock_guard lock(logMutex);
     writeHeader(level);
-    writeFormattedMessage(format, args...);
-    outputStream << std::endl;
+    outputStream << std::format(fmt, args...);
+    if (sizeof...(Args)) {
+      outputStream << std::endl;
+    }
+    return outputStream;
   }
 
-  template <typename... Args> void debug(const char *format, Args... args) {
-    log(LogLevel::DEBUG, format, args...);
+  template <typename... Args>
+  std::ostream &debug(std::format_string<Args...> fmt, Args... args) {
+    return log(LogLevel::DEBUG, fmt, args...);
   }
 
-  template <typename... Args> void info(const char *format, Args... args) {
-    log(LogLevel::INFO, format, args...);
+  template <typename... Args>
+  std::ostream &info(std::format_string<Args...> fmt, Args... args) {
+    return log(LogLevel::INFO, fmt, args...);
   }
 
-  template <typename... Args> void warn(const char *format, Args... args) {
-    log(LogLevel::WARN, format, args...);
+  template <typename... Args>
+  std::ostream &warn(std::format_string<Args...> fmt, Args... args) {
+    return log(LogLevel::WARN, fmt, args...);
   }
 
-  template <typename... Args> void error(const char *format, Args... args) {
-    log(LogLevel::ERROR, format, args...);
+  template <typename... Args>
+  std::ostream &error(std::format_string<Args...> fmt, Args... args) {
+    return log(LogLevel::ERROR, fmt, args...);
   }
 
-  template <typename... Args> void fatal(const char *format, Args... args) {
-    log(LogLevel::FATAL, format, args...);
+  template <typename... Args>
+  std::ostream &fatal(std::format_string<Args...> fmt, Args... args) {
+    return log(LogLevel::FATAL, fmt, args...);
   }
 
 private:
@@ -69,13 +98,6 @@ private:
 
     outputStream << "[" << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "] ";
     outputStream << "[" << toString(level) << "] ";
-  }
-
-  template <typename... Args>
-  void writeFormattedMessage(const char *format, Args... args) {
-    char buffer[1024];
-    std::snprintf(buffer, sizeof(buffer), format, args...);
-    outputStream << buffer;
   }
 
   static std::string toString(LogLevel level) {
