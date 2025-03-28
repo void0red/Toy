@@ -41,9 +41,9 @@ namespace Toy{
 }
 
 
-%left ADD SUB        // 优先级最低（加减）
-%left MUL DIV        // 优先级中等（乘除）
-%left LT GT          // 优先级最高（比较）
+%left ADD SUB            // 优先级最低（加减）
+%left MUL DIV            // 优先级中等（乘除）
+%left LT LE GT GE EQ NE  // 优先级最高（比较）
 
 %token <numVal> NUMBER
 %token <strVal> IDENTIFIER

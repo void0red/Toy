@@ -20,7 +20,6 @@ BISON_TARGET(ToyParser
         toy.y
         ${CMAKE_CURRENT_BINARY_DIR}/toy.tab.cpp
         COMPILE_FLAGS -Wcounterexamples
-        COMPILE_FLAGS --debug
 )
 
 ADD_FLEX_BISON_DEPENDENCY(ToyLexer ToyParser)
