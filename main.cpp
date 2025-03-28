@@ -1,9 +1,11 @@
 #include "Scanner.hpp"
 #include "toy.tab.hpp"
+#include <Logger.hpp>
 #include <fstream>
 #include <iostream>
-
 #include <memory>
+
+#include <llvm/IR/LLVMContext.h>
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {

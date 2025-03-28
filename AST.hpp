@@ -4,16 +4,22 @@
 
 #ifndef AST_HPP
 #define AST_HPP
+#include "Logger.hpp"
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Value.h>
 #include <memory>
 #include <string>
 #include <vector>
-
 namespace Toy {
+
+static std::unique_ptr<llvm::LLVMContext> TheContext;
+static std::unordered_map<std::string, llvm::Value *> NamedValues;
 
 class ExprAST {
 public:
   virtual ~ExprAST() = default;
   virtual std::string to_string() const = 0;
+  virtual llvm::Value *codegen() = 0;
 };
 
 class NumberExprAST : public ExprAST {
@@ -22,6 +28,7 @@ class NumberExprAST : public ExprAST {
 public:
   explicit NumberExprAST(double value) : value(value) {}
   std::string to_string() const override;
+  llvm::Value *codegen() override;
 };
 
 class VariableExprAST : public ExprAST {
@@ -30,6 +37,7 @@ class VariableExprAST : public ExprAST {
 public:
   explicit VariableExprAST(const std::string &name) : name(name) {}
   std::string to_string() const override;
+  llvm::Value *codegen() override;
 };
 
 class BinaryExprAST : public ExprAST {
@@ -40,6 +48,7 @@ public:
   BinaryExprAST(const std::string &op, ExprAST *lhs, ExprAST *rhs)
       : opcode(op), lhs(lhs), rhs(rhs) {}
   std::string to_string() const override;
+  llvm::Value *codegen() override;
 };
 
 // class UnaryExprAST : public ExprAST {
@@ -60,6 +69,7 @@ public:
               std::vector<std::unique_ptr<ExprAST>> &arguments)
       : callee(callee), arguments(std::move(arguments)) {}
   std::string to_string() const override;
+  llvm::Value *codegen() override;
 };
 
 class PrototypeAST : public ExprAST {
@@ -70,6 +80,7 @@ public:
   PrototypeAST(const std::string &name, std::vector<std::string> arguments)
       : name(name), arguments(std::move(arguments)) {}
   std::string to_string() const override;
+  llvm::Value *codegen() override;
 };
 
 class FunctionAST : public ExprAST {
@@ -79,6 +90,7 @@ class FunctionAST : public ExprAST {
 public:
   FunctionAST(PrototypeAST *proto, ExprAST *body) : proto(proto), body(body) {}
   std::string to_string() const override;
+  llvm::Value *codegen() override;
 };
 
 class IfElseExprAST : public ExprAST {
@@ -90,6 +102,7 @@ public:
   IfElseExprAST(ExprAST *condition, ExprAST *then, ExprAST *else_)
       : condition(condition), then(then), else_(else_) {}
   std::string to_string() const override;
+  llvm::Value *codegen() override;
 };
 } // namespace Toy
 

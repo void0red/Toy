@@ -5,7 +5,7 @@
 #include "AST.hpp"
 
 #include <format>
-
+#include <llvm/IR/Constants.h>
 namespace Toy {
 std::string NumberExprAST::to_string() const { return std::to_string(value); }
 std::string VariableExprAST::to_string() const { return this->name; }
@@ -41,4 +41,21 @@ std::string IfElseExprAST::to_string() const {
   return std::format("({}) ? ({}) : ({})", this->condition->to_string(),
                      this->then->to_string(), this->else_->to_string());
 }
+
+llvm::Value *NumberExprAST::codegen() {
+  return llvm::ConstantFP::get(*TheContext, llvm::APFloat(value));
+}
+llvm::Value *VariableExprAST::codegen() {
+  auto v = NamedValues[this->name];
+  if (!v) {
+    LOG_ERROR("Unknown variable name");
+  }
+  return v;
+}
+llvm::Value *BinaryExprAST::codegen() {}
+llvm::Value *CallExprAST::codegen() {}
+llvm::Value *PrototypeAST::codegen() {}
+llvm::Value *FunctionAST::codegen() {}
+llvm::Value *IfElseExprAST::codegen() {}
+
 } // namespace Toy
