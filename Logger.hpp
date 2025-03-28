@@ -4,6 +4,7 @@
 
 #ifndef LOG_HPP
 #define LOG_HPP
+#include "magic_enum/magic_enum.hpp"
 #include <format>
 #include <iomanip>
 #include <iostream>
@@ -54,10 +55,7 @@ public:
 
     std::lock_guard lock(logMutex);
     writeHeader(level);
-    outputStream << std::format(fmt, args...);
-    if (sizeof...(Args)) {
-      outputStream << std::endl;
-    }
+    outputStream << std::format(fmt, args...) << std::endl;
     return outputStream;
   }
 
@@ -97,24 +95,7 @@ private:
     std::tm now_tm = *std::localtime(&now_time_t);
 
     outputStream << "[" << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S") << "] ";
-    outputStream << "[" << toString(level) << "] ";
-  }
-
-  static std::string toString(LogLevel level) {
-    switch (level) {
-    case LogLevel::DEBUG:
-      return "DEBUG";
-    case LogLevel::INFO:
-      return "INFO";
-    case LogLevel::WARN:
-      return "WARN";
-    case LogLevel::ERROR:
-      return "ERROR";
-    case LogLevel::FATAL:
-      return "FATAL";
-    default:
-      return "UNKNOWN";
-    }
+    outputStream << "[" << magic_enum::enum_name(level) << "] ";
   }
 };
 

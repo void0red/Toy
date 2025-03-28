@@ -64,9 +64,11 @@ namespace Toy{
 
 program:
     | program function {
+        $2->codegen();
         LOG_DEBUG() << $2->to_string() << '\n';
     }
     | program EXTERN proto {
+        $3->codegen();
         LOG_DEBUG() << $3->to_string() << '\n';
     }
     ;
@@ -112,16 +114,16 @@ args:
 expr:
     NUMBER         { $$ = new Toy::NumberExprAST($1); }
     | IDENTIFIER     { $$ = new Toy::VariableExprAST(*$1); }
-    | expr ADD expr  { $$ = new Toy::BinaryExprAST("+", $1, $3); }
-    | expr SUB expr  { $$ = new Toy::BinaryExprAST("-", $1, $3); }
-    | expr MUL expr  { $$ = new Toy::BinaryExprAST("*", $1, $3); }
-    | expr DIV expr  { $$ = new Toy::BinaryExprAST("/", $1, $3); }
-    | expr LT expr   { $$ = new Toy::BinaryExprAST("<", $1, $3); }
-    | expr LE expr   { $$ = new Toy::BinaryExprAST("<=", $1, $3); }
-    | expr GT expr   { $$ = new Toy::BinaryExprAST(">", $1, $3); }
-    | expr GE expr   { $$ = new Toy::BinaryExprAST(">=", $1, $3); }
-    | expr EQ expr   { $$ = new Toy::BinaryExprAST("==", $1, $3); }
-    | expr NE expr   { $$ = new Toy::BinaryExprAST("!=", $1, $3); }
+    | expr ADD expr  { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::ADD, $1, $3); }
+    | expr SUB expr  { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::SUB, $1, $3); }
+    | expr MUL expr  { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::MUL, $1, $3); }
+    | expr DIV expr  { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::DIV, $1, $3); }
+    | expr LT expr   { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::LT, $1, $3); }
+    | expr LE expr   { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::LE, $1, $3); }
+    | expr GT expr   { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::GT, $1, $3); }
+    | expr GE expr   { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::GE, $1, $3); }
+    | expr EQ expr   { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::EQ, $1, $3); }
+    | expr NE expr   { $$ = new Toy::BinaryExprAST(Toy::BinaryExprAST::OpType::NE, $1, $3); }
     | IDENTIFIER LPAREN args RPAREN {
         $$ = new Toy::CallExprAST(*$1, *$3);
     }

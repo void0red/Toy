@@ -5,15 +5,20 @@
 #ifndef AST_HPP
 #define AST_HPP
 #include "Logger.hpp"
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 #include <memory>
 #include <string>
 #include <vector>
-namespace Toy {
 
-static std::unique_ptr<llvm::LLVMContext> TheContext;
-static std::unordered_map<std::string, llvm::Value *> NamedValues;
+extern std::unique_ptr<llvm::LLVMContext> TheContext;
+extern std::unique_ptr<llvm::IRBuilder<>> Builder;
+extern std::unique_ptr<llvm::Module> TheModule;
+extern std::unordered_map<std::string, llvm::Value *> NamedValues;
+
+namespace Toy {
 
 class ExprAST {
 public:
@@ -41,14 +46,17 @@ public:
 };
 
 class BinaryExprAST : public ExprAST {
-  std::string opcode;
   std::unique_ptr<ExprAST> lhs, rhs;
 
 public:
-  BinaryExprAST(const std::string &op, ExprAST *lhs, ExprAST *rhs)
+  enum class OpType { ADD, SUB, MUL, DIV, LT, LE, GT, GE, EQ, NE };
+  BinaryExprAST(OpType op, ExprAST *lhs, ExprAST *rhs)
       : opcode(op), lhs(lhs), rhs(rhs) {}
   std::string to_string() const override;
   llvm::Value *codegen() override;
+
+private:
+  OpType opcode;
 };
 
 // class UnaryExprAST : public ExprAST {
@@ -80,7 +88,8 @@ public:
   PrototypeAST(const std::string &name, std::vector<std::string> arguments)
       : name(name), arguments(std::move(arguments)) {}
   std::string to_string() const override;
-  llvm::Value *codegen() override;
+  const std::string &getName() const;
+  llvm::Function *codegen() override;
 };
 
 class FunctionAST : public ExprAST {
@@ -90,7 +99,7 @@ class FunctionAST : public ExprAST {
 public:
   FunctionAST(PrototypeAST *proto, ExprAST *body) : proto(proto), body(body) {}
   std::string to_string() const override;
-  llvm::Value *codegen() override;
+  llvm::Function *codegen() override;
 };
 
 class IfElseExprAST : public ExprAST {
